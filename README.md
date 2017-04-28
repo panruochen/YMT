@@ -48,7 +48,7 @@ file list automatically, as if YMT executes the follow pesudo code.
  sources -= $(LOCAL_EXCLUDE_FILES)
 ```
 
-##### Multiple modules
+##### Multiple Modules in one config.mk
 Actually you can put multiple modules inside one single config file,
 as the project Xee shows:
 ```
@@ -93,16 +93,15 @@ LOCAL_PROJECT_CONFIGS := config-1.mk config-2.mk
 include ../Ymt.mk
 ```
 
-
 ##### Working Directory
 Since YMT does not change current direcory during the whole build process,
 the working directory is always the one where `make' is run.
 
-##### Target Types
+##### Types for Local Modules
 <table>
   <tbody align="left">
     <tr>
-      <th>Target Type</th>
+      <th>Type</th>
       <th>Statement</th>
     </tr>
     <tr>
@@ -228,6 +227,3 @@ Others are taken as files.</td>
     </tr>
   </tbody>
 </table>
-
-
-
