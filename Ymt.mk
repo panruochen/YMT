@@ -60,14 +60,17 @@ ifndef ymt_include_once
 ymt_tab := $(if 1,	)
 ymt_include_once := 1
 
+true := T#
+false:=#
+
 .PHONY: all clean distclean
 
 #**************************************************************
 # Basical functions
 #**************************************************************
-doIfNe = $(strip $(if $(subst $(strip $1),,$(strip $2))$(subst $(strip $2),,$(strip $1)),$3,$4))#no space#
-xeq    = $(call doIfNe,$1,$2,,$3)#no space#
-xne    = $(call doIfNe,$1,$2,$3,)#no space#
+not = $(if $(strip $1),$(false),$(true))##
+seq = $(if $(subst $(strip $1),,$(strip $2))$(subst $(strip $2),,$(strip $1)),$(false),$(true))##
+sne = $(call not,$(call seq,$1,$2))##
 
 define nl_debug
 ========================= $(shell date +%N) =========================
@@ -120,7 +123,7 @@ system_vars := LOCAL_GCC_PREFIX LOCAL_CFLAGS LOCAL_CXXFLAGS LOCAL_LDFLAGS LOCAL_
   LOCAL_C_EXTS LOCAL_CXX_EXTS LOCAL_ASM_EXTS LOCAL_CMD_AS LOCAL_OBJ_EXT LOCAL_DEP_EXT
 CLEAR_VARS = $(call clear_vars, $(system_vars))
 
-build_target = $(eval module_type := $(strip $1)) $(eval X := $(LOCAL_MODULE)-) $(eval ymt_all_targets += $(LOCAL_MODULE)) \
+build_target = $(eval module_type := $(strip $1)) $(eval X := $(LOCAL_MODULE)-) $(eval ymt_all_modules += $(LOCAL_MODULE)) \
   $(foreach i,$(DEFAULT_C_EXTS),$(eval action_$i := cc)) \
   $(foreach i,$(DEFAULT_CXX_EXTS),$(eval action_$i := cxx)) \
   $(foreach i,$(DEFAULT_ASM_EXTS),$(eval action_$i := as)) \
@@ -143,12 +146,24 @@ print-%:; @echo $* = $($*)
 #**************************************************************
 #  include external configurations
 #**************************************************************
-$(if $(strip $(LOCAL_PROJECT_CONFIGS)),,$(eval LOCAL_PROJECT_CONFIGS:=config.mk))
-$(foreach i,$(LOCAL_PROJECT_CONFIGS),$(eval DEPENDENT_MAKEFILES := $(TOP_MAKEFILES) $i) $(eval include $i))
+define error_no_action
 
-build-all: $(foreach i,$(ymt_all_targets),$(i))
-clean-all: $(foreach i,$(ymt_all_targets),clean-$(i))
-distclean-all: $(foreach i,$(ymt_all_targets),distclean-$(i))
+"$1": Select an action for "$2" from the following options
+ $$(call BUILD_EXECUTABLE)
+ $$(call BUILD_STATIC_LIBRARY)
+ $$(call BUILD_SHARED_LIBRARY)
+ $$(call BUILD_RAW_BINARY)
+
+endef
+
+$(if $(strip $(LOCAL_PROJECT_CONFIGS)),,$(eval LOCAL_PROJECT_CONFIGS:=config.mk))
+$(foreach i,$(LOCAL_PROJECT_CONFIGS),$(eval DEPENDENT_MAKEFILES := $(TOP_MAKEFILES) $i)\
+$(eval __ymt_v6:=$(ymt_all_modules))$(eval include $i)\
+  $(if $(call seq,$(__ymt_v6),$(ymt_all_modules)),$(error $(call error_no_action,$i,$(LOCAL_MODULE)))))
+
+build-all: $(foreach i,$(ymt_all_modules),$(i))
+clean-all: $(foreach i,$(ymt_all_modules),clean-$(i))
+distclean-all: $(foreach i,$(ymt_all_modules),distclean-$(i))
 
 endif #ymt_include_once
 
@@ -209,7 +224,7 @@ quiet_cmd_objcopy   = @echo '  OBJCOPY  $$@';
 quiet_cmd_clean     = @echo '  CLEAN    $(LOCAL_MODULE)';
 quiet_cmd_distclean = @echo 'DISTCLEAN  $(LOCAL_MODULE)';
 
-cmd = $(call xeq,$(V),,$(quiet_cmd_$(strip $1)))$(cmd_$(strip $1))
+cmd = $(if $(call seq,,$(V)),$(quiet_cmd_$(strip $1)))$(cmd_$(strip $1))
 
 cmd_cc        = $(GCC) -I$$(dir $$<) $(subst subst_me,$(LOCAL_CFLAGS),$(ccflags)) \
                 $$(LOCAL_CFLAGS_$$<) -c -o $$@ $$<
@@ -365,8 +380,8 @@ ymt_dynamic_texts += $(call nl, distclean-$(LOCAL_MODULE): clean-$(LOCAL_MODULE)
 
 $(call exec, $(ymt_dynamic_texts))
 
-sinclude $(if $(ymt_fast_build),,\
-$(call xeq,all,$(call if1z_then2,$(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(foreach i,$(object_files),$i.$(dep_ext))))
+sinclude $(if $(ymt_fast_build),,$(if $(call seq,all,$(call if1z_then2,$(MAKECMDGOALS),$(.DEFAULT_GOAL))),\
+  $(foreach i,$(object_files),$i.$(dep_ext))))
 
 endif # CORE_BUILD_RULES
 

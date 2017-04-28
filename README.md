@@ -133,6 +133,11 @@ the working directory is always the one where `make' is run.
       <th>Example usecase</th>
     </tr>
     <tr>
+      <td>LOCAL_PROJECT_CONFIGS</td>
+      <td>Define a list of config.mk files included in this project.</td>
+	  <td align="center">It is okay either gathering module configurations in one config.mk or scattering to multiple files</td>
+    </tr>
+    <tr>
       <td>LOCAL_MODULE</td>
       <td>Path name of the module</td>
 	  <td align="center">***</td>
@@ -213,6 +218,7 @@ Others are taken as files.</td>
     <tr>
       <td>LOCAL_MODULE_PRECONDITIONS</td>
       <td>Define preconditions of the module</td>
+	  <td>***</td>
     </tr>
     <tr>
       <td>LOCAL_CFLAGS_xxx.y</td>
